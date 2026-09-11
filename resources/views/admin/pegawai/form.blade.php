@@ -1,0 +1,12 @@
+@extends('layouts.app')
+@php($edit=isset($pegawai))
+@section('title',$edit?'Edit Karyawan':'Tambah Karyawan') @section('page-title',$edit?'Edit Karyawan':'Tambah Karyawan') @section('page-subtitle','Lengkapi biodata dan akun login karyawan')
+@section('content')
+<form class="card form-card" method="POST" action="{{ $edit?route('admin.pegawai.update',$pegawai):route('admin.pegawai.store') }}">@csrf @if($edit)@method('PUT')@endif
+<div class="form-section"><h3>Informasi Karyawan</h3><p>Data identitas dasar karyawan.</p><div class="form-grid">
+<label>Nomor Pegawai *<input name="nomor_pegawai" value="{{ old('nomor_pegawai',$pegawai->nomor_pegawai??'') }}" required></label><label>Nama Lengkap *<input name="nama" value="{{ old('nama',$pegawai->nama??'') }}" required></label>
+<label>Jabatan<select name="jabatan_id"><option value="">Pilih jabatan</option>@foreach($jabatan as $j)<option value="{{ $j->id }}" @selected(old('jabatan_id',$pegawai->jabatan_id??'')==$j->id)>{{ $j->nama_jabatan }}</option>@endforeach</select></label><label>Jenis Kelamin *<select name="jenis_kelamin" required><option value="L" @selected(old('jenis_kelamin',$pegawai->jenis_kelamin??'')==='L')>Laki-laki</option><option value="P" @selected(old('jenis_kelamin',$pegawai->jenis_kelamin??'')==='P')>Perempuan</option></select></label>
+<label>Email<input type="email" name="email" value="{{ old('email',$pegawai->email??'') }}"></label><label>No. Handphone<input name="no_handphone" value="{{ old('no_handphone',$pegawai->no_handphone??'') }}"></label><label class="full">Alamat<textarea name="alamat" rows="3">{{ old('alamat',$pegawai->alamat??'') }}</textarea></label></div></div>
+<div class="form-section"><h3>Akun Login</h3><p>Username menentukan akun yang masuk ke halaman User.</p><div class="form-grid"><label>Username *<input name="username" value="{{ old('username',$pegawai->user->username??'') }}" required></label><label>Password {{ $edit?'(kosongkan jika tetap)':'*' }}<input type="password" name="password" {{ $edit?'':'required' }} minlength="6"></label>@if($edit)<label>Status<select name="status_pegawai"><option value="aktif" @selected(old('status_pegawai',$pegawai->status_pegawai)==='aktif')>Aktif</option><option value="nonaktif" @selected(old('status_pegawai',$pegawai->status_pegawai)==='nonaktif')>Nonaktif</option></select></label>@endif</div></div>
+<div class="form-actions"><a class="btn btn-soft" href="{{ route('admin.pegawai.index') }}">Batal</a><button class="btn btn-primary">{{ $edit?'Simpan Perubahan':'Tambah Karyawan' }}</button></div></form>
+@endsection

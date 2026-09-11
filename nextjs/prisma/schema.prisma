@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Jabatan {
+  id        Int       @id @default(autoincrement())
+  nama      String    @map("nama_jabatan") @db.VarChar(100)
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
+  pegawai   Pegawai[]
+  @@unique([nama])
+  @@map("jabatan")
+}
+
+model Pegawai {
+  id            Int             @id @default(autoincrement())
+  jabatanId     Int?            @map("jabatan_id")
+  nomorPegawai  String          @unique @map("nomor_pegawai") @db.VarChar(50)
+  nama          String          @db.VarChar(100)
+  jenisKelamin  String          @map("jenis_kelamin") @db.VarChar(1)
+  email         String?         @unique @db.VarChar(100)
+  noHandphone   String?         @map("no_handphone") @db.VarChar(20)
+  alamat        String?         @db.Text
+  fotoProfil    String?         @map("foto_profil") @db.VarChar(255)
+  statusPegawai String          @default("aktif") @map("status_pegawai") @db.VarChar(20)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+  jabatan       Jabatan?        @relation(fields: [jabatanId], references: [id])
+  user          User?
+  presensi      Presensi[]
+  pengajuan     Ketidakhadiran[]
+  @@map("pegawai")
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  pegawaiId   Int?      @unique @map("pegawai_id")
+  username    String    @unique @db.VarChar(50)
+  password    String    @db.VarChar(255)
+  role        String    @default("staff") @db.VarChar(20)
+  statusAkun  String    @default("aktif") @map("status_akun") @db.VarChar(20)
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  pegawai     Pegawai?  @relation(fields: [pegawaiId], references: [id])
+  diproses    Ketidakhadiran[] @relation("processedBy")
+  @@map("users")
+}
+
+model LokasiPresensi {
+  id              Int         @id @default(autoincrement())
+  namaLokasi      String      @map("nama_lokasi") @db.VarChar(100)
+  alamat          String      @db.Text
+  latitude        Decimal     @db.Decimal(10, 8)
+  longitude       Decimal     @db.Decimal(11, 8)
+  radiusMeter     Int         @default(100) @map("radius_meter")
+  jamMasuk        String      @default("08:00:00") @map("jam_masuk") @db.VarChar(8)
+  batasTerlambat  String      @default("08:15:00") @map("batas_terlambat") @db.VarChar(8)
+  jamPulang       String      @default("16:00:00") @map("jam_pulang") @db.VarChar(8)
+  status          String      @default("aktif") @db.VarChar(20)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+  presensi        Presensi[]
+  @@map("lokasi_presensi")
+}
+
+model Presensi {
+  id                Int       @id @default(autoincrement())
+  pegawaiId         Int       @map("pegawai_id")
+  lokasiPresensiId  Int       @map("lokasi_presensi_id")
+  tanggal           DateTime  @db.Date
+  jamMasuk          String?   @map("jam_masuk") @db.VarChar(8)
+  fotoMasuk        String?   @map("foto_masuk") @db.VarChar(255)
+  latitudeMasuk    Decimal?  @map("latitude_masuk") @db.Decimal(10, 8)
+  longitudeMasuk   Decimal?  @map("longitude_masuk") @db.Decimal(11, 8)
+  akurasiMasuk     Decimal?  @map("akurasi_masuk") @db.Decimal(8, 2)
+  jarakMasuk       Decimal?  @map("jarak_masuk") @db.Decimal(10, 2)
+  jamPulang        String?   @map("jam_pulang") @db.VarChar(8)
+  fotoPulang       String?   @map("foto_pulang") @db.VarChar(255)
+  latitudePulang   Decimal?  @map("latitude_pulang") @db.Decimal(10, 8)
+  longitudePulang  Decimal?  @map("longitude_pulang") @db.Decimal(11, 8)
+  akurasiPulang    Decimal?  @map("akurasi_pulang") @db.Decimal(8, 2)
+  jarakPulang      Decimal?  @map("jarak_pulang") @db.Decimal(10, 2)
+  status           String    @default("hadir") @db.VarChar(20)
+  catatan          String?   @db.Text
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @updatedAt @map("updated_at")
+  pegawai          Pegawai   @relation(fields: [pegawaiId], references: [id])
+  lokasi           LokasiPresensi @relation(fields: [lokasiPresensiId], references: [id])
+  @@unique([pegawaiId, tanggal])
+  @@map("presensi")
+}
+
+model Ketidakhadiran {
+  id               Int       @id @default(autoincrement())
+  pegawaiId        Int       @map("pegawai_id")
+  jenis            String    @db.VarChar(20)
+  kategoriAlasan   String    @map("kategori_alasan") @db.VarChar(100)
+  alasan           String    @db.Text
+  tanggalMulai    DateTime  @map("tanggal_mulai") @db.Date
+  tanggalSelesai  DateTime  @map("tanggal_selesai") @db.Date
+  fileBukti       String?   @map("file_bukti") @db.VarChar(255)
+  statusPengajuan String    @default("menunggu") @map("status_pengajuan") @db.VarChar(20)
+  catatanAdmin    String?   @map("catatan_admin") @db.Text
+  diprosesOleh    Int?      @map("diproses_oleh")
+  diprosesPada    DateTime? @map("diproses_pada")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  pegawai         Pegawai   @relation(fields: [pegawaiId], references: [id])
+  pemroses        User?     @relation("processedBy", fields: [diprosesOleh], references: [id])
+  @@map("ketidakhadiran")
+}
+
+model HariLibur {
+  id          Int      @id @default(autoincrement())
+  tanggal     DateTime @unique @db.Date
+  namaLibur   String   @map("nama_libur") @db.VarChar(150)
+  keterangan  String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  @@map("hari_libur")
+}
