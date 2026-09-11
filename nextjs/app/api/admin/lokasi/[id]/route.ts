@@ -1,0 +1,5 @@
+import { NextResponse } from 'next/server'
+import { getSession } from '@/lib/auth'
+import { db } from '@/lib/db'
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const id = Number((await context.params).id); const body = await request.json(); if (body.status === 'aktif') await db.lokasiPresensi.updateMany({ where: { id: { not: id } }, data: { status: 'nonaktif' } }); return NextResponse.json(await db.lokasiPresensi.update({ where: { id }, data: { ...body, radiusMeter: Number(body.radiusMeter), latitude: body.latitude, longitude: body.longitude } })) }
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const id = Number((await context.params).id); await db.lokasiPresensi.update({ where: { id }, data: { status: 'nonaktif' } }); return NextResponse.json({ ok: true }) }

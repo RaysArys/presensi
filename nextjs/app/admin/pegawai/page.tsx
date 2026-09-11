@@ -1,0 +1,7 @@
+import { redirect } from 'next/navigation'
+import { getSession } from '@/lib/auth'
+import { db } from '@/lib/db'
+import AppShell from '@/components/AppShell'
+import EmployeeForm from '@/components/EmployeeForm'
+
+export default async function EmployeesPage() { const session = await getSession(); if (session?.role !== 'admin') redirect('/login'); const [employees, positions] = await Promise.all([db.pegawai.findMany({ include: { jabatan: true, user: true }, orderBy: { createdAt: 'desc' } }), db.jabatan.findMany({ orderBy: { nama: 'asc' } })]); return <AppShell><main className="dashboard"><header className="topbar"><div><p className="eyebrow">ADMIN / DATA MASTER</p><h1>Kelola Karyawan</h1><p className="muted">Kelola data dan akun login karyawan.</p></div></header><section className="admin-split"><EmployeeForm positions={positions} /><article className="panel table-panel"><h2>Daftar karyawan</h2><div className="table-scroll"><table><thead><tr><th>No. Pegawai</th><th>Nama</th><th>Jabatan</th><th>Username</th><th>Status</th></tr></thead><tbody>{employees.map((item) => <tr key={item.id}><td>{item.nomorPegawai}</td><td><strong>{item.nama}</strong><small>{item.email || 'Tanpa email'}</small></td><td>{item.jabatan?.nama || '-'}</td><td>{item.user?.username || '-'}</td><td><span className={`pill ${item.statusPegawai === 'aktif' ? 'hadir' : 'pending'}`}>{item.statusPegawai}</span></td></tr>)}</tbody></table></div></article></section></main></AppShell> }

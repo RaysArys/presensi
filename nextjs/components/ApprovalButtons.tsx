@@ -1,0 +1,3 @@
+'use client'
+import { useState } from 'react'
+export default function ApprovalButtons({ id }: { id: number }) { const [busy, setBusy] = useState(false); async function decide(statusPengajuan: string) { setBusy(true); await fetch(`/api/pengajuan/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ statusPengajuan }) }); window.location.reload() } return <div className="decision-buttons"><button disabled={busy} onClick={() => decide('disetujui')}>Setujui</button><button className="danger-button" disabled={busy} onClick={() => decide('ditolak')}>Tolak</button></div> }

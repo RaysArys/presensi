@@ -1,0 +1,7 @@
+import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { getSession } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const id = Number((await context.params).id); const body = await request.json(); const employee = await db.pegawai.update({ where: { id }, data: { nama: body.nama, nomorPegawai: body.nomorPegawai, jenisKelamin: body.jenisKelamin, email: body.email || null, noHandphone: body.noHandphone || null, alamat: body.alamat || null, jabatanId: body.jabatanId || null, statusPegawai: body.statusPegawai, user: { update: { username: body.username, statusAkun: body.statusPegawai, ...(body.password ? { password: await bcrypt.hash(body.password, 12) } : {}) } } } }); return NextResponse.json(employee) }
+export async function DELETE(request: Request, context: { params: Promise<{ id: string }> }) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const id = Number((await context.params).id); await db.pegawai.update({ where: { id }, data: { statusPegawai: 'nonaktif', user: { update: { statusAkun: 'nonaktif' } } } }); return NextResponse.json({ ok: true }) }

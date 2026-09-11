@@ -1,4 +1,7 @@
 import './globals.css'
+import './shell.css'
+import './admin.css'
+import './attendance.css'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Presensi Kita', description: 'Presensi karyawan berbasis lokasi dan foto' }

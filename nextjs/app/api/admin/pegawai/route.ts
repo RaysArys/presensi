@@ -1,0 +1,9 @@
+import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
+import { z } from 'zod'
+import { getSession } from '@/lib/auth'
+import { db } from '@/lib/db'
+
+const schema = z.object({ nomorPegawai: z.string().min(1).max(50), nama: z.string().min(1).max(100), jabatanId: z.coerce.number().nullable().optional(), jenisKelamin: z.enum(['L', 'P']), email: z.string().email().nullable().optional(), noHandphone: z.string().max(20).nullable().optional(), alamat: z.string().nullable().optional(), username: z.string().min(1).max(50), password: z.string().min(6), statusPegawai: z.enum(['aktif', 'nonaktif']).default('aktif') })
+export async function GET(request: Request) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const q = new URL(request.url).searchParams.get('q') || ''; return NextResponse.json(await db.pegawai.findMany({ where: q ? { OR: [{ nama: { contains: q } }, { nomorPegawai: { contains: q } }] } : undefined, include: { jabatan: true, user: true }, orderBy: { createdAt: 'desc' } })) }
+export async function POST(request: Request) { const session = await getSession(); if (session?.role !== 'admin') return NextResponse.json({ error: 'Akses ditolak.' }, { status: 403 }); const parsed = schema.safeParse(await request.json()); if (!parsed.success) return NextResponse.json({ error: 'Data karyawan tidak valid.' }, { status: 422 }); const data = parsed.data; const employee = await db.pegawai.create({ data: { nomorPegawai: data.nomorPegawai, nama: data.nama, jabatanId: data.jabatanId || null, jenisKelamin: data.jenisKelamin, email: data.email || null, noHandphone: data.noHandphone || null, alamat: data.alamat || null, statusPegawai: data.statusPegawai, user: { create: { username: data.username, password: await bcrypt.hash(data.password, 12), role: 'staff', statusAkun: data.statusPegawai } } } }); return NextResponse.json(employee, { status: 201 }) }
