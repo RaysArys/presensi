@@ -6,7 +6,11 @@ export function timeFromInput(value: string) {
 
 export function formatTime(value: Date | null | undefined) {
   if (!value) return ''
-  return value.toISOString().slice(11, 16)
+
+  const hours = value.getHours().toString().padStart(2, '0')
+  const minutes = value.getMinutes().toString().padStart(2, '0')
+
+  return `${hours}:${minutes}`
 }
 
 export function timeValue(value: Date | string) {
